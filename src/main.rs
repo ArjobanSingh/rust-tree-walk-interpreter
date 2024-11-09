@@ -4,7 +4,7 @@ use tree_walk_interpreter::Lox;
 
 fn main() {
     if let Err(e) = Lox::begin(env::args()) {
-        eprintln!("{e}");
+        eprintln!("Application Error: {e}");
         process::exit(64)
     }
 }
