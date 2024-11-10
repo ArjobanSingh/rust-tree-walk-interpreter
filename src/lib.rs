@@ -1,15 +1,34 @@
+pub mod custom_scanner;
+pub mod token;
+
 use std::{
     error::Error,
     fs,
-    io::{self, Write},
+    io::{self, Write}, process,
 };
 
-pub fn lox(mut args: impl ExactSizeIterator<Item = String>) -> Result<(), Box<dyn Error>> {
+use custom_scanner::Scanner;
+
+static mut HAD_ERROR: bool = false;
+fn toggle_had_error(value: bool) {
+    // SAFETY: There are no other threads which could be accessing `HAD_ERROR`.
+    unsafe {
+        HAD_ERROR = value;
+    }
+}
+
+fn had_error() -> bool {
+    // SAFETY: There are no other threads which could be accessing `HAD_ERROR`.
+    unsafe { HAD_ERROR }
+}
+
+pub fn lox<T>(mut args: T) -> Result<(), io::Error>
+where
+    T: ExactSizeIterator<Item = String>,
+{
     if args.len() > 2 {
-        return Err(Box::new(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Usage: jlox [script]",
-        )));
+        eprintln!("Usage: jlox [script]");
+        process::exit(64);
     }
 
     args.next();
@@ -25,6 +44,10 @@ pub fn lox(mut args: impl ExactSizeIterator<Item = String>) -> Result<(), Box<dy
 fn run_file(file_path: String) -> Result<(), io::Error> {
     let data = fs::read_to_string(file_path)?;
     run(data);
+
+    if had_error() {
+        process::exit(65);
+    }
     Ok(())
 }
 
@@ -40,10 +63,26 @@ fn run_prompt() -> Result<(), io::Error> {
         if bytes_read == 0 {
             break;
         }
-        run(line);
+        run(line.trim_end().to_string());
     }
 
     Ok(())
 }
 
-fn run(line: String) {}
+fn run(line: String) {
+    let scanner = Scanner::new(line);
+    let tokens = scanner.scan_tokens();
+
+    for token in tokens {
+        println!("{token:?}");
+    }
+}
+
+fn error(line: i32, message: String) {
+    report(line, String::from(""), message);
+}
+
+fn report(line: i32, c_where: String, message: String) {
+    eprintln!("[line {line}] Error{c_where}: {message}");
+    toggle_had_error(true);
+}
