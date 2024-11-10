@@ -1,5 +1,6 @@
 pub mod custom_scanner;
 pub mod token;
+pub mod token_type;
 
 use std::{
     error::Error,
@@ -64,13 +65,14 @@ fn run_prompt() -> Result<(), io::Error> {
             break;
         }
         run(line.trim_end().to_string());
+        toggle_had_error(false);
     }
 
     Ok(())
 }
 
 fn run(line: String) {
-    let scanner = Scanner::new(line);
+    let mut scanner = Scanner::new(line);
     let tokens = scanner.scan_tokens();
 
     for token in tokens {
