@@ -34,10 +34,46 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source.len()
+        self.current >= self.source.chars().count()
     }
 
-    fn scan_token(&self) {
-        
+    fn scan_token(&mut self) {
+        if let Some(ch) = self.advance() {
+            match ch {
+                '(' => self.add_token(TokenType::LeftParen),
+                ')' => self.add_token(TokenType::RightParen),
+                '{' => self.add_token(TokenType::LeftBrace),
+                '}' => self.add_token(TokenType::RightBrace),
+                ',' => self.add_token(TokenType::Comma),
+                '.' => self.add_token(TokenType::Dot),
+                '-' => self.add_token(TokenType::Minus),
+                '+' => self.add_token(TokenType::Plus),
+                ';' => self.add_token(TokenType::SemiColon),
+                '*' => self.add_token(TokenType::Star),
+                _ => (),
+            };
+        }
+    }
+
+    // TODO: can be optimised to store original String into char vector
+    fn advance(&mut self) -> Option<char> {
+        let ch = self.source.chars().nth(self.current);
+        self.current += 1;
+        ch
+    }
+
+    fn add_token(&mut self, c_type: TokenType) {
+        self.add_token_with_literal(c_type, None);
+    }
+
+    fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<char>) {
+        let text: String = self
+            .source
+            .chars()
+            .skip(self.start)
+            .take(self.current - self.start)
+            .collect();
+        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
+        self.tokens.push(new_token);
     }
 }
