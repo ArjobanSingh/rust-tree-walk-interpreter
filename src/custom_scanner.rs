@@ -73,7 +73,7 @@ impl Scanner {
             .skip(self.start)
             .take(self.current - self.start)
             .collect();
-        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
+        let new_token = Token::new(c_type, text, literal, self.line);
         self.tokens.push(new_token);
     }
 }
