@@ -80,11 +80,11 @@ fn run(line: String) {
     }
 }
 
-fn error(line: i32, message: String) {
+pub fn lox_error(line: u32, message: String) {
     report(line, String::from(""), message);
 }
 
-fn report(line: i32, c_where: String, message: String) {
+fn report(line: u32, c_where: String, message: String) {
     eprintln!("[line {line}] Error{c_where}: {message}");
     toggle_had_error(true);
 }

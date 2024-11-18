@@ -1,3 +1,4 @@
+use crate::lox_error;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
@@ -50,7 +51,39 @@ impl Scanner {
                 '+' => self.add_token(TokenType::Plus),
                 ';' => self.add_token(TokenType::SemiColon),
                 '*' => self.add_token(TokenType::Star),
-                _ => (),
+                '!' => {
+                    let c_type = if self.match_char('=') {
+                        TokenType::BangEqual
+                    } else {
+                        TokenType::Bang
+                    };
+                    self.add_token(c_type);
+                }
+                '=' => {
+                    let c_type = if self.match_char('=') {
+                        TokenType::EqualEqual
+                    } else {
+                        TokenType::Equal
+                    };
+                    self.add_token(c_type);
+                }
+                '<' => {
+                    let c_type = if self.match_char('=') {
+                        TokenType::LessEqual
+                    } else {
+                        TokenType::Less
+                    };
+                    self.add_token(c_type);
+                }
+                '>' => {
+                    let c_type = if self.match_char('=') {
+                        TokenType::GreaterEqual
+                    } else {
+                        TokenType::Greater
+                    };
+                    self.add_token(c_type);
+                }
+                _ => lox_error(self.line, String::from("Unexpected character.")),
             };
         }
     }
@@ -67,13 +100,30 @@ impl Scanner {
     }
 
     fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<char>) {
+        // User code could contain non-ascii chars, so can't use string slices, need to convert to chars()
         let text: String = self
             .source
             .chars()
             .skip(self.start)
             .take(self.current - self.start)
             .collect();
-        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
+        let new_token = Token::new(c_type, text, literal, self.line);
         self.tokens.push(new_token);
+    }
+
+    fn match_char(&mut self, expected: char) -> bool {
+        if self.is_at_end() {
+            return false;
+        }
+
+        if let Some(ch) = self.source.chars().nth(self.current) {
+            if ch != expected {
+                return false;
+            }
+            self.current += 1;
+            return true;
+        }
+        // In case of None value
+        false
     }
 }
