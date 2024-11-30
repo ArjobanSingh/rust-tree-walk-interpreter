@@ -3,9 +3,9 @@ pub mod token;
 pub mod token_type;
 
 use std::{
-    error::Error,
     fs,
-    io::{self, Write}, process,
+    io::{self, Write},
+    process,
 };
 
 use custom_scanner::Scanner;
@@ -72,7 +72,7 @@ fn run_prompt() -> Result<(), io::Error> {
 }
 
 fn run(line: String) {
-    let mut scanner = Scanner::new(line);
+    let mut scanner = Scanner::new(&line);
     let tokens = scanner.scan_tokens();
 
     for token in tokens {

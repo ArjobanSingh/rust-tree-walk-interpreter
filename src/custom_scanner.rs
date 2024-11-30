@@ -1,23 +1,26 @@
 use crate::lox_error;
 use crate::token::Token;
 use crate::token_type::TokenType;
+use std;
 
-pub struct Scanner {
-    source: String,
+pub struct Scanner<'a> {
+    source: &'a str,
+    source_iter: std::str::CharIndices<'a>,
     tokens: Vec<Token>,
-    start: usize,
-    current: usize,
+    start: usize,   // keep track of idx of start byte of lexeme
+    current: usize, // keep track of idx of current iter byte of lexeme
     line: u32,
 }
 
-impl Scanner {
-    pub fn new(source: String) -> Self {
+impl<'a> Scanner<'a> {
+    pub fn new(source: &'a str) -> Self {
         Scanner {
             source,
             tokens: Vec::new(),
             start: 0,
             current: 0,
             line: 1,
+            source_iter: source.char_indices(),
         }
     }
 
@@ -35,7 +38,8 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source.chars().count()
+        // compares byte offsets, no need to decode characters
+        self.current >= self.source.len()
     }
 
     fn scan_token(&mut self) {
@@ -88,11 +92,13 @@ impl Scanner {
         }
     }
 
-    // TODO: optimise to not use char().th()
     fn advance(&mut self) -> Option<char> {
-        let ch = self.source.chars().nth(self.current);
-        self.current += 1;
-        ch
+        if let Some((idx, ch)) = self.source_iter.next() {
+            self.current = idx + ch.len_utf8(); // we could also do += ch.len_utf8();
+            Some(ch)
+        } else {
+            None
+        }
     }
 
     fn add_token(&mut self, c_type: TokenType) {
@@ -100,14 +106,8 @@ impl Scanner {
     }
 
     fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<char>) {
-        // User code could contain non-ascii chars, so can't use string slices, need to convert to chars()
-        let text: String = self
-            .source
-            .chars()
-            .skip(self.start)
-            .take(self.current - self.start)
-            .collect();
-        let new_token = Token::new(c_type, text, literal, self.line);
+        let text = &self.source[self.start..self.current];
+        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
         self.tokens.push(new_token);
     }
 
@@ -116,14 +116,15 @@ impl Scanner {
             return false;
         }
 
-        if let Some(ch) = self.source.chars().nth(self.current) {
-            if ch != expected {
-                return false;
+        if let Some(&(idx, ch)) = self.source_iter.clone().peekable().peek() {
+            if ch == expected {
+                self.source_iter.next();
+                self.current = idx + ch.len_utf8();
+                return true;
             }
-            self.current += 1;
-            return true;
         }
-        // In case of None value
+
+        // In case of None value or not match
         false
     }
 }
