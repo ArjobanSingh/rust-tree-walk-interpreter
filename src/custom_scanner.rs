@@ -88,7 +88,7 @@ impl Scanner {
         }
     }
 
-    // TODO: can be optimised to store original String into char vector
+    // TODO: optimise to not use char().th()
     fn advance(&mut self) -> Option<char> {
         let ch = self.source.chars().nth(self.current);
         self.current += 1;
