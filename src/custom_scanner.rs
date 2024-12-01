@@ -6,7 +6,7 @@ use std;
 pub struct Scanner<'a> {
     source: &'a str,
     source_iter: std::str::CharIndices<'a>,
-    tokens: Vec<Token>,
+    tokens: Vec<Token<'a>>,
     start: usize,   // keep track of idx of start byte of lexeme
     current: usize, // keep track of idx of current iter byte of lexeme
     line: u32,
@@ -104,12 +104,56 @@ impl<'a> Scanner<'a> {
                 // Consume and ignore thse white space chars
                 ' ' | '\r' | '\t' => (),
                 '\n' => {
-                    // on new line just move to next line and ignore
+                    // Consume and ignore new line char and just move the line by 1
                     self.line += 1;
                 }
-                _ => lox_error(self.line, String::from("Unexpected character.")),
+                '"' => self.string(),
+                _ => lox_error(self.line, "Unexpected character."),
             };
         }
+    }
+
+    fn add_token(&mut self, c_type: TokenType) {
+        self.add_token_with_literal(c_type, None);
+    }
+
+    fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<&'a str>) {
+        let text = &self.source[self.start..self.current];
+        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
+        self.tokens.push(new_token);
+    }
+
+    fn string(&mut self) {
+        while let Some((_, ch)) = self.peek() {
+            // Reached end of string, break loop
+            if ch == '"' {
+                break;
+            }
+
+            // We support multi line strings
+            if ch == '\n' {
+                self.line += 1;
+            }
+
+            // keep consuming string literal chars before the terminating "
+            self.advance();
+        }
+
+        // In case while loop exited because source reached end and
+        // not the string end, show error to the user
+        if self.is_at_end() {
+            lox_error(self.line, "Unterminated string.");
+            return;
+        }
+
+        // Now consume the last "
+        self.advance();
+
+        // Trim the surroding quotes and we know start is at start quote
+        // and current is at idx after the last quote, so we will not trim within the byte.
+        // NOTE: We don't support escape sequences as of now in strings.
+        let value = &self.source[self.start + 1..self.current - 1];
+        self.add_token_with_literal(TokenType::String, Some(value));
     }
 
     fn advance(&mut self) -> Option<char> {
@@ -119,16 +163,6 @@ impl<'a> Scanner<'a> {
         } else {
             None
         }
-    }
-
-    fn add_token(&mut self, c_type: TokenType) {
-        self.add_token_with_literal(c_type, None);
-    }
-
-    fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<char>) {
-        let text = &self.source[self.start..self.current];
-        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
-        self.tokens.push(new_token);
     }
 
     // we don't need to explicitly check for is_empty() as peek() does that implicitly
