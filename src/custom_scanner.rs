@@ -1,7 +1,8 @@
+use std;
+
 use crate::lox_error;
 use crate::token::Token;
 use crate::token_type::TokenType;
-use std;
 
 pub struct Scanner<'a> {
     source: &'a str,
@@ -101,12 +102,10 @@ impl<'a> Scanner<'a> {
                         self.add_token(TokenType::Slash);
                     }
                 }
-                // Consume and ignore thse white space chars
+                // Consume and ignore these white space chars
                 ' ' | '\r' | '\t' => (),
-                '\n' => {
-                    // Consume and ignore new line char and just move the line by 1
-                    self.line += 1;
-                }
+                // Consume and ignore new line char and just move the line by 1
+                '\n' => self.line += 1,
                 '"' => self.string(),
                 _ => lox_error(self.line, "Unexpected character."),
             };
