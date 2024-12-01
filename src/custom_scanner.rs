@@ -87,6 +87,26 @@ impl<'a> Scanner<'a> {
                     };
                     self.add_token(c_type);
                 }
+                '/' => {
+                    // We have found a comment, so we keep consuming the whole line and shunt those chars
+                    if self.match_char('/') {
+                        // A comment goes until the end of the line.
+                        while let Some((_, ch)) = self.peek() {
+                            if ch == '\n' {
+                                break;
+                            }
+                            self.advance();
+                        }
+                    } else {
+                        self.add_token(TokenType::Slash);
+                    }
+                }
+                // Consume and ignore thse white space chars
+                ' ' | '\r' | '\t' => (),
+                '\n' => {
+                    // on new line just move to next line and ignore
+                    self.line += 1;
+                }
                 _ => lox_error(self.line, String::from("Unexpected character.")),
             };
         }
@@ -111,12 +131,9 @@ impl<'a> Scanner<'a> {
         self.tokens.push(new_token);
     }
 
+    // we don't need to explicitly check for is_empty() as peek() does that implicitly
     fn match_char(&mut self, expected: char) -> bool {
-        if self.is_at_end() {
-            return false;
-        }
-
-        if let Some(&(idx, ch)) = self.source_iter.clone().peekable().peek() {
+        if let Some((idx, ch)) = self.peek() {
             if ch == expected {
                 self.source_iter.next();
                 self.current = idx + ch.len_utf8();
@@ -126,5 +143,11 @@ impl<'a> Scanner<'a> {
 
         // In case of None value or not match
         false
+    }
+
+    // small wrapper to get the values without writing again.
+    // though can be used directly where needed.
+    fn peek(&self) -> Option<(usize, char)> {
+        self.source_iter.clone().peekable().peek().copied()
     }
 }
