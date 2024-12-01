@@ -5,13 +5,13 @@ use crate::token_type::TokenType;
 // #[derive(Debug)]
 pub struct Token<'a> {
     c_type: TokenType, // type is reserved so c_type, c for custom
-    lexeme: String,
+    lexeme: &'a str,
     literal: Option<&'a str>,
     line: u32,
 }
 
 impl<'a> Token<'a> {
-    pub fn new(c_type: TokenType, lexeme: String, literal: Option<&'a str>, line: u32) -> Self {
+    pub fn new(c_type: TokenType, lexeme: &'a str, literal: Option<&'a str>, line: u32) -> Self {
         Token {
             c_type,
             lexeme,

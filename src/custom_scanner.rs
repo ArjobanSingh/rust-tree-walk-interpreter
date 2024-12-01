@@ -31,7 +31,7 @@ impl<'a> Scanner<'a> {
             self.scan_token();
         }
 
-        let token = Token::new(TokenType::Eof, String::from(""), None, self.line);
+        let token = Token::new(TokenType::Eof, "", None, self.line);
         self.tokens.push(token);
 
         &self.tokens
@@ -118,8 +118,8 @@ impl<'a> Scanner<'a> {
     }
 
     fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<&'a str>) {
-        let text = &self.source[self.start..self.current];
-        let new_token = Token::new(c_type, text.to_string(), literal, self.line);
+        let text = &self.source[self.start..self.current]; // It's type is => &'a str
+        let new_token = Token::new(c_type, text, literal, self.line);
         self.tokens.push(new_token);
     }
 
