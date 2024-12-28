@@ -3,7 +3,7 @@
 !*+-/=<> <= == // operators
 "This is a valid string and we support emojis 💖 😊 🚀. Cool Right?!"
 123.45
-var name = 1
+var name = "John Doe";
 fun getName() {
     return name
 }
@@ -14,4 +14,4 @@ level comment man.
 How'z it's going guys
 */
 
-var afterComment = 2;
+var num = 233;

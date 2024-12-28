@@ -107,21 +107,25 @@ impl<'a> Scanner<'a> {
 
                             // We have found the end of the comment
                             if ch == '*'
-                                && self
-                                    .peek_next()
-                                    .map_or(false, |(_, next_ch)| next_ch == '/')
+                                && self.peek_next().map_or(false, |(_, next_ch)| {
+                                    self.advance(); // consume the *
+                                    next_ch == '/'
+                                })
                             {
-                                // Consume the closing */
-                                self.advance();
-                                self.advance();
+                                // Will not consume the last / yet. Let's check for errors first.
                                 break;
-                            };
-                            self.advance();
+                            } else {
+                                self.advance();
+                            }
                         }
 
-                        // In case while loop exited because source reached end comment is not closed
+                        // In case while loop exited because source reached end,
+                        // meaning we have an unterminated block comment. As we have not consumed the last / yet.
                         if self.is_at_end() {
                             lox_error(self.line, "Unterminated block comment.");
+                        } else {
+                            // Consume the last /
+                            self.advance();
                         }
                     } else {
                         self.add_token(TokenType::Slash);
