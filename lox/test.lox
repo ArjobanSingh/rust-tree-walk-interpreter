@@ -2,3 +2,4 @@
 (( )){} // grouping stuff
 !*+-/=<> <= == // operators
 "This is a valid string and we support emojis 💖 😊 🚀. Cool Right?!"
+123.45

@@ -1,7 +1,7 @@
 use std;
 
 use crate::lox_error;
-use crate::token::Token;
+use crate::token::{Literal, Token};
 use crate::token_type::TokenType;
 
 pub struct Scanner<'a> {
@@ -107,6 +107,8 @@ impl<'a> Scanner<'a> {
                 // Consume and ignore new line char and just move the line by 1
                 '\n' => self.line += 1,
                 '"' => self.string(),
+                // If we find a digit, we consume the whole number
+                '0'..='9' => self.number(),
                 _ => lox_error(self.line, "Unexpected character."),
             };
         }
@@ -116,10 +118,44 @@ impl<'a> Scanner<'a> {
         self.add_token_with_literal(c_type, None);
     }
 
-    fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<&'a str>) {
-        let text = &self.source[self.start..self.current]; // It's type is => &'a str
+    fn add_token_with_literal(&mut self, c_type: TokenType, literal: Option<Literal<'a>>) {
+        let text = &self.source[self.start..self.current];
         let new_token = Token::new(c_type, text, literal, self.line);
         self.tokens.push(new_token);
+    }
+
+    fn number(&mut self) {
+        while let Some((_, ch)) = self.peek() {
+            if !self.is_digit(ch) {
+                break;
+            }
+            self.advance();
+        }
+
+        // Look for a fractional part.
+        if self.peek().map_or(false, |(_, ch)| ch == '.')
+            && self
+                .peek_next()
+                .map_or(false, |(_, next_ch)| self.is_digit(next_ch))
+        {
+            // Consume the "."
+            self.advance();
+
+            while let Some((_, ch)) = self.peek() {
+                if !self.is_digit(ch) {
+                    break;
+                }
+                self.advance();
+            }
+        }
+
+        // We know start pointer is at start of number and current is at idx after the last digit
+        // so we will not trim within the byte.
+        let value = &self.source[self.start..self.current];
+        self.add_token_with_literal(
+            TokenType::Number,
+            Some(Literal::Num(value.parse().unwrap())),
+        );
     }
 
     fn string(&mut self) {
@@ -152,7 +188,7 @@ impl<'a> Scanner<'a> {
         // and current is at idx after the last quote, so we will not trim within the byte.
         // NOTE: We don't support escape sequences as of now in strings.
         let value = &self.source[self.start + 1..self.current - 1];
-        self.add_token_with_literal(TokenType::String, Some(value));
+        self.add_token_with_literal(TokenType::String, Some(Literal::Str(value)));
     }
 
     fn advance(&mut self) -> Option<char> {
@@ -166,10 +202,9 @@ impl<'a> Scanner<'a> {
 
     // we don't need to explicitly check for is_empty() as peek() does that implicitly
     fn match_char(&mut self, expected: char) -> bool {
-        if let Some((idx, ch)) = self.peek() {
+        if let Some((_, ch)) = self.peek() {
             if ch == expected {
-                self.source_iter.next();
-                self.current = idx + ch.len_utf8();
+                self.advance();
                 return true;
             }
         }
@@ -182,5 +217,15 @@ impl<'a> Scanner<'a> {
     // though can be used directly where needed.
     fn peek(&self) -> Option<(usize, char)> {
         self.source_iter.clone().peekable().peek().copied()
+    }
+
+    fn peek_next(&self) -> Option<(usize, char)> {
+        let mut iter = self.source_iter.clone().peekable();
+        iter.next();
+        iter.peek().copied()
+    }
+
+    fn is_digit(&self, c: char) -> bool {
+        c >= '0' && c <= '9'
     }
 }
