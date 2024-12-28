@@ -109,7 +109,13 @@ impl<'a> Scanner<'a> {
                 '"' => self.string(),
                 // If we find a digit, we consume the whole number
                 '0'..='9' => self.number(),
-                _ => lox_error(self.line, "Unexpected character."),
+                _ => {
+                    if self.is_alpha(ch) {
+                        self.identifier();
+                    } else {
+                        lox_error(self.line, "Unexpected character.");
+                    }
+                }
             };
         }
     }
@@ -191,6 +197,35 @@ impl<'a> Scanner<'a> {
         self.add_token_with_literal(TokenType::String, Some(Literal::Str(value)));
     }
 
+    fn identifier(&mut self) {
+        while let Some((_, ch)) = self.peek() {
+            if !self.is_alpha_numeric(ch) {
+                break;
+            }
+            self.advance();
+        }
+
+        match &self.source[self.start..self.current] {
+            "and" => self.add_token(TokenType::And),
+            "class" => self.add_token(TokenType::Class),
+            "else" => self.add_token(TokenType::Else),
+            "false" => self.add_token(TokenType::False),
+            "for" => self.add_token(TokenType::For),
+            "fun" => self.add_token(TokenType::Fun),
+            "if" => self.add_token(TokenType::If),
+            "nil" => self.add_token(TokenType::Nil),
+            "or" => self.add_token(TokenType::Or),
+            "print" => self.add_token(TokenType::Print),
+            "return" => self.add_token(TokenType::Return),
+            "super" => self.add_token(TokenType::Super),
+            "this" => self.add_token(TokenType::This),
+            "true" => self.add_token(TokenType::True),
+            "var" => self.add_token(TokenType::Var),
+            "while" => self.add_token(TokenType::While),
+            _ => self.add_token(TokenType::Identifier),
+        }
+    }
+
     fn advance(&mut self) -> Option<char> {
         if let Some((idx, ch)) = self.source_iter.next() {
             self.current = idx + ch.len_utf8(); // we could also do += ch.len_utf8();
@@ -227,5 +262,13 @@ impl<'a> Scanner<'a> {
 
     fn is_digit(&self, c: char) -> bool {
         c >= '0' && c <= '9'
+    }
+
+    fn is_alpha(&self, c: char) -> bool {
+        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+    }
+
+    fn is_alpha_numeric(&self, c: char) -> bool {
+        self.is_alpha(c) || self.is_digit(c)
     }
 }

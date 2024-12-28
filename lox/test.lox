@@ -3,3 +3,7 @@
 !*+-/=<> <= == // operators
 "This is a valid string and we support emojis 💖 😊 🚀. Cool Right?!"
 123.45
+var name = 1
+fun getName() {
+    return name
+}
