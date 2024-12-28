@@ -98,6 +98,31 @@ impl<'a> Scanner<'a> {
                             }
                             self.advance();
                         }
+                    } else if self.match_char('*') {
+                        // We have found a block comment, so we keep consuming the whole block comment
+                        while let Some((_, ch)) = self.peek() {
+                            if ch == '\n' {
+                                self.line += 1;
+                            }
+
+                            // We have found the end of the comment
+                            if ch == '*'
+                                && self
+                                    .peek_next()
+                                    .map_or(false, |(_, next_ch)| next_ch == '/')
+                            {
+                                // Consume the closing */
+                                self.advance();
+                                self.advance();
+                                break;
+                            };
+                            self.advance();
+                        }
+
+                        // In case while loop exited because source reached end comment is not closed
+                        if self.is_at_end() {
+                            lox_error(self.line, "Unterminated block comment.");
+                        }
                     } else {
                         self.add_token(TokenType::Slash);
                     }

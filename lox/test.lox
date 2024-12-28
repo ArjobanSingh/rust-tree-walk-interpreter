@@ -7,3 +7,11 @@ var name = 1
 fun getName() {
     return name
 }
+
+/* Hello this is a block
+level comment man.
+* Some point and not end
+How'z it's going guys
+*/
+
+var afterComment = 2;
