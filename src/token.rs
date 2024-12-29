@@ -6,8 +6,8 @@ use crate::token_type::TokenType;
 pub enum Literal<'a> {
     Str(&'a str),
     Num(f64),
-    // Bool(bool),
-    // Nil,
+    Bool(bool),
+    Nil,
 }
 
 impl<'a> fmt::Display for Literal<'a> {
@@ -15,8 +15,8 @@ impl<'a> fmt::Display for Literal<'a> {
         match self {
             Literal::Str(s) => write!(f, "{}", s),
             Literal::Num(n) => write!(f, "{}", n),
-            // Literal::Bool(b) => write!(f, "{}", b),
-            // Literal::Nil => write!(f, "nil"),
+            Literal::Bool(b) => write!(f, "{}", b),
+            Literal::Nil => write!(f, "nil"),
         }
     }
 }
@@ -27,17 +27,18 @@ impl<'a> Debug for Literal<'a> {
         match self {
             Literal::Str(s) => write!(f, "{}", s),
             Literal::Num(n) => write!(f, "{}", n),
-            // Literal::Bool(b) => write!(f, "{}", b),
-            // Literal::Nil => write!(f, "nil"),
+            Literal::Bool(b) => write!(f, "{}", b),
+            Literal::Nil => write!(f, "nil"),
         }
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Token<'a> {
-    c_type: TokenType, // type is reserved so c_type, c for custom
-    lexeme: &'a str,
-    literal: Option<Literal<'a>>,
-    line: u32,
+    pub(super) c_type: TokenType, // type is reserved so c_type, c for custom
+    pub(super) lexeme: &'a str,
+    pub(super) literal: Option<Literal<'a>>,
+    pub(super) line: u32,
 }
 
 impl<'a> Token<'a> {

@@ -1,27 +1,27 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TokenType {
     // Single-character tokens.
-    LeftParen, // (
+    LeftParen,  // (
     RightParen, // )
-    LeftBrace, // {
+    LeftBrace,  // {
     RightBrace, // }
-    Comma, // ,
-    Dot, // .
-    Minus, // -
-    Plus, // +
-    SemiColon, // ;
-    Slash, // /
-    Star, // *
+    Comma,      // ,
+    Dot,        // .
+    Minus,      // -
+    Plus,       // +
+    SemiColon,  // ;
+    Slash,      // /
+    Star,       // *
 
     // One or two character tokens.
-    Bang, // !
-    BangEqual, // !=
-    Equal, // =
-    EqualEqual, // ==
-    Greater, // >
+    Bang,         // !
+    BangEqual,    // !=
+    Equal,        // =
+    EqualEqual,   // ==
+    Greater,      // >
     GreaterEqual, // >=
-    Less, // <
-    LessEqual, // <=
+    Less,         // <
+    LessEqual,    // <=
 
     // Literals.
     Identifier,

@@ -1,14 +1,16 @@
+pub mod ast_printer;
 pub mod custom_scanner;
+pub mod expression;
+pub mod parser;
 pub mod token;
 pub mod token_type;
 
+use custom_scanner::Scanner;
 use std::{
     fs,
     io::{self, Write},
     process,
 };
-
-use custom_scanner::Scanner;
 
 static mut HAD_ERROR: bool = false;
 fn toggle_had_error(value: bool) {
